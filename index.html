@@ -4,29 +4,53 @@
 		<meta charset="utf-8">
 		<title>AuthaFootprint - Accurate Interactive Visualziation of Human Ecological Footprint</title>
 		<script type="text/javascript" src='js/lib/require/require.js'></script>
+		<style>
+path {
+	fill: #ccc;
+	stroke: #fff;
+	stroke-width: .5px;
+}
+
+path:hover {
+	fill: red;
+}
+		</style>
 	</head>
 	<body>
-		<script type="text/javascript">
+		<script>
 requirejs.config({baseUrl: 'js/lib/d3',
 	paths: {
 		'd3': ['d3']
 	}});
 
 
-require(['d3', 'd3-geo','topojson'], function(d3) {
-  d3.select("body").append("h1").text("Successfully loaded D3 version " + d3.version);
-var svg = d3.select("body").append("svg");
-var path = d3.geoPath().projection(d3.geoMercator());
-d3.json("json/110m.json", function(error, world) {
-  if (error) throw error;
-  svg.selectAll("path")
-     .data(topojson.feature(world,world.objects.countries).features)
-     .enter().append("path")
-     .attr("d", path);
-});	
+require(['d3', 'd3-geo','topojson'], function(dthree, d3Geo, topojson) {
+	dthree.select("body").append("h1").text("Successfully loaded D3 version " + dthree.version);
+
+	var width = 960, height = 500;
+
+	var path = d3Geo.geoPath().projection(d3Geo.geoMercator());
+
+	var svg = dthree.select("body").append("svg")
+		.attr("width", width)
+		.attr("height", height);
+
+var url = "/json/110m.json";
+
+	dthree.json(url, function(error, world) {
+		if (error) throw error;
+
+		console.log(world);
+		var countries = topojson.feature(world, world.objects.countries);
+		console.log(countries);
+
+		svg.selectAll("path")
+			.data(countries.features)
+			.enter().append("path")
+			.attr("d", path);
+	});	
 })
 		</script>
 	</body>
 </html> 
-
 
