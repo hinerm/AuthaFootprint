@@ -24,30 +24,46 @@ requirejs.config({baseUrl: 'js/lib/d3',
 	}});
 
 
-require(['d3', 'd3-geo','topojson'], function(dthree, d3Geo, topojson) {
-	dthree.select("body").append("h1").text("Successfully loaded D3 version " + dthree.version);
+require(['d3', 'd3-geo', 'd3-geo-polygon','topojson'], function(d3base, d3Geo, d3Poly, topojson) {
 
 	var width = 960, height = 500;
+	var k = 0.59;
 
-	var path = d3Geo.geoPath().projection(d3Geo.geoMercator());
+	var path = d3Geo.geoPath().projection(d3Poly.geoImago().k(k));
 
-	var svg = dthree.select("body").append("svg")
+	var svg = d3base.select("body").append("svg")
 		.attr("width", width)
 		.attr("height", height);
 
-var url = "/json/110m.json";
+	var worldJson = "/json/world-110m.v1.json";
+	var worldNames = "/tsv/world-110m.v1.tsv";
+			var countryNames = d3base.map();
 
-	dthree.json(url, function(error, world) {
-		if (error) throw error;
+	d3base.json(worldJson, function(e1, world) {
+		if (e1) throw e1;
+		d3base.tsv(worldNames, function(d) { countryNames.set(d.id, d.name); }, function(e2, names) {
+			if (e2) throw e2;
 
-		console.log(world);
-		var countries = topojson.feature(world, world.objects.countries);
-		console.log(countries);
+			var countries = topojson.feature(world, world.objects.countries);
+			var features = countries.features;
+			var centroids = features.map(function (feature) {
+				return path.centroid(feature);
+			});
 
-		svg.selectAll("path")
-			.data(countries.features)
-			.enter().append("path")
-			.attr("d", path);
+			svg.selectAll("path")
+				.data(countries.features)
+				.enter().append("path")
+				.attr("d", path);
+
+			svg.selectAll(null)
+				.data(countries.features)
+				.enter()
+				.append("text")
+				.text(function(d){
+					return d.countryName = countryNames.get(d.id);
+				})
+
+		});
 	});	
 })
 		</script>
