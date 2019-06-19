@@ -6,7 +6,7 @@
 		<script type="text/javascript" src='js/lib/require/require.js'></script>
 		<style>
 path {
-	fill: #ccc;
+	fill: #000;
 	stroke: #fff;
 	stroke-width: .5px;
 }
@@ -78,12 +78,8 @@ requirejs.config({baseUrl: 'js/lib/d3',
 				.data(countries)
 				.enter()
 				.append("path")
-				.attr("stroke","green")
-				.attr("stroke-width",1)
-				.attr("fill", "white")
 				.attr("d", path )
 				.on("mouseover",function(d,i){
-					d3.select(this).attr("fill","grey").attr("stroke-width",2);
 					return tooltip.style("hidden", false).html(countryNames.get(d.id));
 				})
 				.on("mousemove",function(d){
@@ -93,7 +89,6 @@ requirejs.config({baseUrl: 'js/lib/d3',
 						.html(countryNames.get(d.id));
 				})
 				.on("mouseout",function(d,i){
-					d3.select(this).attr("fill","white").attr("stroke-width",1);
 					tooltip.classed("hidden", true);
 				});
                };
