@@ -60,9 +60,12 @@ requirejs.config({baseUrl: 'js/lib/d3',
 			.attr("height", height);
 		var tooltip = d3.select("div.tooltip");
 		d3.queue().defer(d3.json, worldNames).await(buildMap);
-		function buildMap(error, d) { 
+		function buildMap(error, countryArray) { 
 			if (error) throw error;
-			countryNames.set(d.country-code, d.name);
+			countryArray.forEach(function (item, index) {
+				countryNames.set(item["country-code"], item["name"]);
+			});
+			
 		};
 
 		d3.queue().defer(d3.json, worldJson)
@@ -81,13 +84,13 @@ requirejs.config({baseUrl: 'js/lib/d3',
 				.attr("d", path )
 				.on("mouseover",function(d,i){
 					d3.select(this).attr("fill","grey").attr("stroke-width",2);
-					return tooltip.style("hidden", false).html(d.name);
+					return tooltip.style("hidden", false).html(countryNames.get(d.id));
 				})
 				.on("mousemove",function(d){
 					tooltip.classed("hidden", false)
 						.style("top", (d3.event.pageY) + "px")
 						.style("left", (d3.event.pageX + 10) + "px")
-						.html(d.name);
+						.html(countryNames.get(d.id));
 				})
 				.on("mouseout",function(d,i){
 					d3.select(this).attr("fill","white").attr("stroke-width",1);
