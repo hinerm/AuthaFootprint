@@ -14,8 +14,25 @@ path {
 path:hover {
 	fill: red;
 }
+svg {
+
+}
+.hidden {
+	display: none;
+}
+div.tooltip {
+	color: #222; 
+	background: #fff; 
+	border-radius: 3px; 
+	box-shadow: 0px 0px 2px 0px #a6a6a6; 
+	padding: .2em; 
+	text-shadow: #f5f5f5 0 1px 0;
+	opacity: 0.9; 
+	position: absolute;
+	}
 		</style>
 	</head>
+	<div class="tooltip"></div>
 	<body>
 		<script>
 requirejs.config({baseUrl: 'js/lib/d3',
@@ -23,50 +40,63 @@ requirejs.config({baseUrl: 'js/lib/d3',
 		'd3': ['d3']
 	}});
 
+	require(['d3', 'd3-geo', 'd3-geo-polygon','topojson'], function(d3, d3Geo, d3Poly, topojson) {
 
-require(['d3', 'd3-geo', 'd3-geo-polygon','topojson'], function(d3base, d3Geo, d3Poly, topojson) {
+		var width = 1000;
+		var height = 500;
+		var k = 0.59;
 
-	var width = 960, height = 500;
-	var k = 0.59;
+		var svg = d3.select("body").append("svg")
+			.attr("width", width)
+			.attr("height", height);
 
-	var path = d3Geo.geoPath().projection(d3Poly.geoImago().k(k));
+		var worldJson = "/json/world-110m.v1.json";
+		var worldNames = "/json/all.json";
+		var countryNames = d3.map();
 
-	var svg = d3base.select("body").append("svg")
-		.attr("width", width)
-		.attr("height", height);
+		var path = d3Geo.geoPath().projection(d3Poly.geoImago().k(k));
+		var svg = svg.append("g")
+			.attr("width", width)
+			.attr("height", height);
+		var tooltip = d3.select("div.tooltip");
+		d3.queue().defer(d3.json, worldNames).await(buildMap);
+		function buildMap(error, d) { 
+			if (error) throw error;
+			countryNames.set(d.country-code, d.name);
+		};
 
-	var worldJson = "/json/world-110m.v1.json";
-	var worldNames = "/tsv/world-110m.v1.tsv";
-			var countryNames = d3base.map();
-
-	d3base.json(worldJson, function(e1, world) {
-		if (e1) throw e1;
-		d3base.tsv(worldNames, function(d) { countryNames.set(d.id, d.name); }, function(e2, names) {
-			if (e2) throw e2;
-
-			var countries = topojson.feature(world, world.objects.countries);
-			var features = countries.features;
-			var centroids = features.map(function (feature) {
-				return path.centroid(feature);
-			});
+		d3.queue().defer(d3.json, worldJson)
+			.await(buildCountries);
+		function buildCountries(error, world) {
+			if (error) throw error;
+			var countries = topojson.feature(world, world.objects.countries).features;
 
 			svg.selectAll("path")
-				.data(countries.features)
-				.enter().append("path")
-				.attr("d", path);
-
-			svg.selectAll(null)
-				.data(countries.features)
+				.data(countries)
 				.enter()
-				.append("text")
-				.text(function(d){
-					return d.countryName = countryNames.get(d.id);
+				.append("path")
+				.attr("stroke","green")
+				.attr("stroke-width",1)
+				.attr("fill", "white")
+				.attr("d", path )
+				.on("mouseover",function(d,i){
+					d3.select(this).attr("fill","grey").attr("stroke-width",2);
+					return tooltip.style("hidden", false).html(d.name);
 				})
+				.on("mousemove",function(d){
+					tooltip.classed("hidden", false)
+						.style("top", (d3.event.pageY) + "px")
+						.style("left", (d3.event.pageX + 10) + "px")
+						.html(d.name);
+				})
+				.on("mouseout",function(d,i){
+					d3.select(this).attr("fill","white").attr("stroke-width",1);
+					tooltip.classed("hidden", true);
+				});
+               };
+       });
 
-		});
-	});	
-})
+
 		</script>
 	</body>
 </html> 
-
