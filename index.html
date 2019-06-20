@@ -108,17 +108,18 @@
     // The following variables track the last processed event.
     var translateLast = [0,0];
     var scaleLast     = null;
+	var lastTransform = null;
 
     function render() {
-        map.selectAll('path')       // Redraw all map paths
-            .attr('d', path);
+        map.selectAll('g')       // Redraw all map paths
+            .attr("transform", lastTransform);
     }
 
     function handlePanZoom() {
         // Handle pan and zoom events
-
-        var scale = d3.event.transform.k;
-        var translate = [d3.event.transform.x, d3.event.transform.y];
+		var transform = d3.event.transform;
+        var scale = transform.k;
+        var translate = [transform.x, transform.y];
         
         // If the scaling changes, ignore translation (otherwise touch zooms are weird).
         var delta = [ translate[0] - translateLast[0], translate[1] - translateLast[1] ];
@@ -147,6 +148,10 @@
         // would seem equivalent, but it doesn't seem to work reliably.
         scaleLast = scale;
         translateLast = translate;
+		transform.k = scale;
+		transform.x = translate[0];
+		transform.y = translate[1];
+		transformLast = transform;
 
         render();
     }
